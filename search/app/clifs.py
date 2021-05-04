@@ -26,12 +26,12 @@ class CLIFS:
 
         # Preload the videos in the data input directory
         # This is done as upload through web interface isn't implemented yet
-        for f in glob.glob('{}/*'.format(os.getenv('INPUT_DIR'))):
+        for f in glob.glob('{}/*'.format("./data")):
             self.add_video(f)
 
 
     def add_video(self, path, batch_size=128, ms_between_features=1000,
-                  patch_size=360):
+                  patch_size=180):
         # Calculates features from video images.
         # Loops over the input video to extract every frames_between_features
         # frame and calculate the features from it. The features are saved
@@ -121,13 +121,15 @@ class CLIFS:
         self.feature_idx_to_video.extend(feature_video_map)
 
 
-    def search(self, query, n=9, threshold=37):
+    def search(self, query, n=9, threshold=1):
         # Takes a query, calculates its features and finds the most similar
         # image features and thus corresponding images
         text_inputs = torch.cat([clip.tokenize(query)]).to(self.device)
+        #print(text_inputs)
         with torch.no_grad():
             text_features = self.model.encode_text(text_inputs)
         text_features /= text_features.norm(dim=-1, keepdim=True)
+        #print(text_features)
         similarity = (100.0 * text_features @ self.image_features.T)
 
         # The 100 in n * 100 is just an arbitrary value to 1) find enough
@@ -184,3 +186,14 @@ class CLIFS:
             return None
         cv2.imwrite(image_path, frame)
         return image_name
+
+
+def main():
+    clip = CLIFS()
+    while(True):
+        query = input("enter text: ")
+        clip.search(query)
+
+if __name__ == "__main__":
+    main()
+
